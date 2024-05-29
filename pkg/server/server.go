@@ -58,7 +58,7 @@ func (s *Server) Run() error {
 		return err
 	}
 
-	// SERVER LOOP
+	//SERVER LOOP
 	for {
 		log.Println("Accepting new session")
 		sess, err := listener.Accept(s.ctx)
@@ -80,57 +80,52 @@ func (s *Server) streamHandler(sess quic.Connection) {
 			break
 		}
 
-		// Handle protocol activity on stream
+		//Handle protocol activity on stream
 		s.protocolHandler(stream)
 	}
 }
 
 func (s *Server) protocolHandler(stream quic.Stream) error {
-	// THIS IS WHERE YOU START HANDLING YOUR APP PROTOCOL
+	//THIS IS WHERE YOU START HANDLING YOUR APP PROTOCOL
 	buff := pdu.MakePduBuffer()
 
-	for {
-		n, err := stream.Read(buff)
-		if err != nil {
-			log.Printf("[server] Error Reading Raw Data: %s", err)
-			return err
-		}
-
-		data, err := pdu.PduFromBytes(buff[:n])
-		if err != nil {
-			log.Printf("[server] Error decoding PDU: %s", err)
-			return err
-		}
-
-		log.Printf("[server] Data In: [%s] %s",
-			data.GetTypeAsString(), string(data.Data))
-
-		// Now lets echo it back
-		rspMsg := fmt.Sprintf("ack: FromServer Echo-%s",
-			string(data.Data))
-
-		rspPdu := pdu.PDU{
-			Mtype: pdu.TYPE_DATA | pdu.TYPE_ACK,
-			Len:   uint32(len(rspMsg)),
-			Data:  []byte(rspMsg),
-		}
-
-		rspBytes, err := pdu.PduToBytes(&rspPdu)
-		if err != nil {
-			log.Printf("[server] Error encoding PDU: %s", err)
-			return err
-		}
-
-		_, err = stream.Write(rspBytes)
-		if err != nil {
-			log.Printf("[server] Error sending response: %s", err)
-			return err
-		}
-
-		// Additional logic can be added here to continue or break the loop
-		// For demonstration, we break the loop after one iteration
-		break
+	n, err := stream.Read(buff)
+	if err != nil {
+		log.Printf("[server] Error Reading Raw Data: %s", err)
+		return err
 	}
 
+	data, err := pdu.PduFromBytes(buff[:n])
+	if err != nil {
+		log.Printf("[server] Error decoding PDU: %s", err)
+		return err
+	}
+
+	log.Printf("[server] Data In: [%s] %s",
+		data.GetTypeAsString(), string(data.Data))
+
+	//Now lets echo it back
+	rspMsg := fmt.Sprintf("ack: FromServer Echo-%s",
+		string(data.Data))
+
+	rspPdu := pdu.PDU{
+		Mtype: pdu.TYPE_DATA | pdu.TYPE_ACK,
+		Len:   uint32(len(rspMsg)),
+		Data:  []byte(rspMsg),
+	}
+
+	fmt.Printf("Server-> %v", rspPdu)
+
+	rspBytes, err := pdu.PduToBytes(&rspPdu)
+	if err != nil {
+		log.Printf("[server] Error encoding PDU: %s", err)
+		return err
+	}
+
+	_, err = stream.Write(rspBytes)
+	if err != nil {
+		log.Printf("[server] Error sending response: %s", err)
+		return err
+	}
 	return nil
 }
