@@ -5,7 +5,8 @@ import (
 	"crypto/tls"
 	"fmt"
 	"log"
-
+	"bufio"
+"os"
 	"drexel.edu/net-quic/pkg/pdu"
 	"drexel.edu/net-quic/pkg/util"
 	"github.com/quic-go/quic-go"
@@ -57,48 +58,53 @@ func (c *Client) Run() error {
 }
 
 func (c *Client) protocolHandler() error {
+	// Open a stream
 	stream, err := c.conn.OpenStreamSync(c.ctx)
 	if err != nil {
 		log.Printf("[cli] error opening stream %s", err)
 		return err
 	}
-
 	defer stream.Close()
 
-	for {
-		// Send a message to the server
-		req := pdu.NewPDU(pdu.TYPE_DATA, []byte("hello from 3835"))
-		pduBytes, err := pdu.PduToBytes(req)
-		if err != nil {
-			log.Printf("[cli] error making pdu byte array %s", err)
-			return err
-		}
+	// Read message from user input
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter message to send to server: ")
+	userInput, _ := reader.ReadString('\n')
 
-		n, err := stream.Write(pduBytes)
-		if err != nil {
-			log.Printf("[cli] error writing to stream %s", err)
-			return err
-		}
-		log.Printf("[cli] wrote %d bytes to stream", n)
-
-		// Read response from the server
-		buffer := pdu.MakePduBuffer()
-		n, err = stream.Read(buffer)
-		if err != nil {
-			log.Printf("[cli] error reading from stream %s", err)
-			return err
-		}
-		rsp, err := pdu.PduFromBytes(buffer[:n])
-		if err != nil {
-			log.Printf("[cli] error converting pdu from bytes %s", err)
-			return err
-		}
-		log.Printf("[cli] got response: %s", rsp.ToJsonString())
-
-		// Additional logic can be added here to continue or break the loop
-		// For demonstration, we break the loop after one iteration
-		break
+	// Create PDU with user input message
+	req := pdu.NewPDU(pdu.TYPE_DATA, []byte(userInput))
+	pduBytes, err := pdu.PduToBytes(req)
+	if err != nil {
+		log.Printf("[cli] error encoding PDU: %s", err)
+		return err
 	}
+
+	// Send PDU to server
+	n, err := stream.Write(pduBytes)
+	if err != nil {
+		log.Printf("[cli] error writing to stream %s", err)
+		return err
+	}
+	log.Printf("[cli] wrote %d bytes to stream", n)
+
+	// Read response from server
+	buffer := pdu.MakePduBuffer()
+	n, err = stream.Read(buffer)
+	if err != nil {
+		log.Printf("[cli] error reading from stream %s", err)
+		return err
+	}
+
+	// Convert received bytes to PDU
+	rsp, err := pdu.PduFromBytes(buffer[:n])
+	if err != nil {
+		log.Printf("[cli] error decoding PDU: %s", err)
+		return err
+	}
+
+	// Log response from server
+	rspDataString := string(rsp.Data)
+	log.Printf("[cli] got response: %s", rspDataString)
 
 	return nil
 }
