@@ -9,7 +9,7 @@ const (
 	// PDU types
 	TYPE_DATA = 0
 	TYPE_ACK  = 1
-
+	TYPE_VIDEO = 2
 	MAX_PDU_SIZE = 1024
 )
 

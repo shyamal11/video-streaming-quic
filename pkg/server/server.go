@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"log"
-
+	"os"
 	"drexel.edu/net-quic/pkg/pdu"
 	"drexel.edu/net-quic/pkg/util"
 	"github.com/quic-go/quic-go"
@@ -85,47 +85,41 @@ func (s *Server) streamHandler(sess quic.Connection) {
 	}
 }
 
+// Update protocolHandler function
 func (s *Server) protocolHandler(stream quic.Stream) error {
-	//THIS IS WHERE YOU START HANDLING YOUR APP PROTOCOL
-	buff := pdu.MakePduBuffer()
+    buff := pdu.MakePduBuffer()
 
-	n, err := stream.Read(buff)
-	if err != nil {
-		log.Printf("[server] Error Reading Raw Data: %s", err)
-		return err
-	}
+    // Open the file to save the received video
+    file, err := os.Create("../received_video.mp4")
+    if err != nil {
+        log.Printf("[server] error creating video file: %s", err)
+        return err
+    }
+    defer file.Close()
 
-	data, err := pdu.PduFromBytes(buff[:n])
-	if err != nil {
-		log.Printf("[server] Error decoding PDU: %s", err)
-		return err
-	}
+    for {
+        n, err := stream.Read(buff)
+        if err != nil {
+            log.Printf("[server] Error Reading Raw Data: %s", err)
+            return err
+        }
 
-	log.Printf("[server] Data In: [%s] %s",
-		data.GetTypeAsString(), string(data.Data))
+        data, err := pdu.PduFromBytes(buff[:n])
+        if err != nil {
+            log.Printf("[server] Error decoding PDU: %s", err)
+            return err
+        }
 
-	//Now lets echo it back
-	rspMsg := fmt.Sprintf("ack: FromServer Echo-%s",
-		string(data.Data))
-
-	rspPdu := pdu.PDU{
-		Mtype: pdu.TYPE_DATA | pdu.TYPE_ACK,
-		Len:   uint32(len(rspMsg)),
-		Data:  []byte(rspMsg),
-	}
-
-	fmt.Printf("Server-> %v", rspPdu)
-
-	rspBytes, err := pdu.PduToBytes(&rspPdu)
-	if err != nil {
-		log.Printf("[server] Error encoding PDU: %s", err)
-		return err
-	}
-
-	_, err = stream.Write(rspBytes)
-	if err != nil {
-		log.Printf("[server] Error sending response: %s", err)
-		return err
-	}
-	return nil
+        if data.Mtype == pdu.TYPE_VIDEO {
+			log.Printf("[server] received video data of lengthdddd %d: %v", len(data.Data), data.Data)
+            _, err = file.Write(data.Data)
+            if err != nil {
+                log.Printf("[server] error writing to video file: %s", err)
+                return err
+            }
+            log.Printf("[server] received video data of length %d", len(data.Data))
+        } else {
+            log.Printf("[server] received non-video data")
+        }
+    }
 }

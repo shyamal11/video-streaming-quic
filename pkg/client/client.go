@@ -5,8 +5,9 @@ import (
 	"crypto/tls"
 	"fmt"
 	"log"
-	"bufio"
-"os"
+
+	"io"
+    "os"
 	"drexel.edu/net-quic/pkg/pdu"
 	"drexel.edu/net-quic/pkg/util"
 	"github.com/quic-go/quic-go"
@@ -58,53 +59,45 @@ func (c *Client) Run() error {
 }
 
 func (c *Client) protocolHandler() error {
-	// Open a stream
-	stream, err := c.conn.OpenStreamSync(c.ctx)
-	if err != nil {
-		log.Printf("[cli] error opening stream %s", err)
-		return err
-	}
-	defer stream.Close()
+    stream, err := c.conn.OpenStreamSync(c.ctx)
+    if err != nil {
+        log.Printf("[cli] error opening stream %s", err)
+        return err
+    }
+    defer stream.Close()
 
-	// Read message from user input
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter message to send to server: ")
-	userInput, _ := reader.ReadString('\n')
+    // Open the video file
+    file, err := os.Open("../test.mp4") // Replace with the path to your video file
+    if err != nil {
+        log.Printf("[cli] error opening video file %s", err)
+        return err
+    }
+    defer file.Close()
 
-	// Create PDU with user input message
-	req := pdu.NewPDU(pdu.TYPE_DATA, []byte(userInput))
-	pduBytes, err := pdu.PduToBytes(req)
-	if err != nil {
-		log.Printf("[cli] error encoding PDU: %s", err)
-		return err
-	}
+    buffer := make([]byte, pdu.MAX_PDU_SIZE)
+    for {
+        n, err := file.Read(buffer)
+        if err != nil {
+            if err == io.EOF {
+                break
+            }
+            log.Printf("[cli] error reading from file %s", err)
+            return err
+        }
 
-	// Send PDU to server
-	n, err := stream.Write(pduBytes)
-	if err != nil {
-		log.Printf("[cli] error writing to stream %s", err)
-		return err
-	}
-	log.Printf("[cli] wrote %d bytes to stream", n)
+        videoPDU := pdu.NewPDU(pdu.TYPE_VIDEO, buffer[:n])
+        pduBytes, err := pdu.PduToBytes(videoPDU)
+        if err != nil {
+            log.Printf("[cli] error encoding PDU: %s", err)
+            return err
+        }
 
-	// Read response from server
-	buffer := pdu.MakePduBuffer()
-	n, err = stream.Read(buffer)
-	if err != nil {
-		log.Printf("[cli] error reading from stream %s", err)
-		return err
-	}
-
-	// Convert received bytes to PDU
-	rsp, err := pdu.PduFromBytes(buffer[:n])
-	if err != nil {
-		log.Printf("[cli] error decoding PDU: %s", err)
-		return err
-	}
-
-	// Log response from server
-	rspDataString := string(rsp.Data)
-	log.Printf("[cli] got response: %s", rspDataString)
-
-	return nil
+        _, err = stream.Write(pduBytes)
+        if err != nil {
+            log.Printf("[cli] error writing to stream %s", err)
+            return err
+        }
+    }
+    log.Printf("[cli] video streaming completed")
+    return nil
 }
