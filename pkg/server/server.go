@@ -109,15 +109,17 @@ func (s *Server) protocolHandler(stream quic.Stream) error {
             log.Printf("[server] Error decoding PDU: %s", err)
             return err
         }
+		
+	
 
         if data.Mtype == pdu.TYPE_VIDEO {
-			log.Printf("[server] received video data of lengthdddd %d: %v", len(data.Data), data.Data)
+			
             _, err = file.Write(data.Data)
             if err != nil {
                 log.Printf("[server] error writing to video file: %s", err)
                 return err
             }
-            log.Printf("[server] received video data of length %d", len(data.Data))
+            log.Printf("[server] received video data of length %d", len(data.Data), data.Data)
         } else {
             log.Printf("[server] received non-video data")
         }

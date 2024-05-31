@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"log"
-
+	"encoding/hex"
 	"io"
     "os"
 	"drexel.edu/net-quic/pkg/pdu"
@@ -84,6 +84,8 @@ func (c *Client) protocolHandler() error {
             log.Printf("[cli] error reading from file %s", err)
             return err
         }
+
+		log.Printf("[cli] read %d bytes from file: %s", n, hex.EncodeToString(buffer[:n]))
 
         videoPDU := pdu.NewPDU(pdu.TYPE_VIDEO, buffer[:n])
         pduBytes, err := pdu.PduToBytes(videoPDU)
