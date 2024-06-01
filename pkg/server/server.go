@@ -4,8 +4,10 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"log"
 	"os"
+
 	"drexel.edu/net-quic/pkg/pdu"
 	"drexel.edu/net-quic/pkg/util"
 	"github.com/quic-go/quic-go"
@@ -20,9 +22,10 @@ type ServerConfig struct {
 }
 
 type Server struct {
-	cfg ServerConfig
-	tls *tls.Config
-	ctx context.Context
+	cfg  ServerConfig
+	tls  *tls.Config
+	conn quic.Connection
+	ctx  context.Context
 }
 
 func NewServer(cfg ServerConfig) *Server {
@@ -72,56 +75,38 @@ func (s *Server) Run() error {
 }
 
 func (s *Server) streamHandler(sess quic.Connection) {
+	stream, err := sess.OpenStream()
+	if err != nil {
+		log.Printf("[server] error opening stream: %s", err)
+		return
+	}
+	defer stream.Close()
+
+	file, err := os.Open("test.mp4")
+	if err != nil {
+		log.Printf("[server] error opening video file: %s", err)
+		return
+	}
+	defer file.Close()
+
+	buffer := make([]byte, pdu.MAX_PDU_SIZE)
 	for {
-		log.Print("[server] waiting for client to open stream")
-		stream, err := sess.AcceptStream(s.ctx)
+		n, err := file.Read(buffer)
 		if err != nil {
-			log.Printf("[server] stream closed: %s", err)
-			break
+			if err == io.EOF {
+				break
+			}
+			log.Printf("[server] error reading from video file: %s", err)
+			return
 		}
 
-		//Handle protocol activity on stream
-		s.protocolHandler(stream)
+		log.Printf("[server] sending %d bytes of video data", n)
+
+		_, err = stream.Write(buffer[:n])
+		if err != nil {
+			log.Printf("[server]error writing to stream: %s", err)
+			return
+		}
 	}
-}
-
-// Update protocolHandler function
-func (s *Server) protocolHandler(stream quic.Stream) error {
-    buff := pdu.MakePduBuffer()
-
-    // Open the file to save the received video
-    file, err := os.Create("../received_video.mp4")
-    if err != nil {
-        log.Printf("[server] error creating video file: %s", err)
-        return err
-    }
-    defer file.Close()
-
-    for {
-        n, err := stream.Read(buff)
-        if err != nil {
-            log.Printf("[server] Error Reading Raw Data: %s", err)
-            return err
-        }
-
-        data, err := pdu.PduFromBytes(buff[:n])
-        if err != nil {
-            log.Printf("[server] Error decoding PDU: %s", err)
-            return err
-        }
-		
-	
-
-        if data.Mtype == pdu.TYPE_VIDEO {
-			
-            _, err = file.Write(data.Data)
-            if err != nil {
-                log.Printf("[server] error writing to video file: %s", err)
-                return err
-            }
-            log.Printf("[server] received video data of length %d", len(data.Data), data.Data)
-        } else {
-            log.Printf("[server] received non-video data")
-        }
-    }
+	log.Printf("[server] video sent successfully")
 }

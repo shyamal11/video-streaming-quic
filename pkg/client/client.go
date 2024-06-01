@@ -4,10 +4,10 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"log"
-	"encoding/hex"
 	"io"
-    "os"
+	"log"
+	"os"
+
 	"drexel.edu/net-quic/pkg/pdu"
 	"drexel.edu/net-quic/pkg/util"
 	"github.com/quic-go/quic-go"
@@ -49,57 +49,49 @@ func NewClient(cfg ClientConfig) *Client {
 
 func (c *Client) Run() error {
 	serverAddr := fmt.Sprintf("%s:%d", c.cfg.ServerAddr, c.cfg.PortNumber)
-	conn, err := quic.DialAddr(c.ctx, serverAddr, c.tls, nil)
+	session, err := quic.DialAddr(c.ctx, serverAddr, c.tls, nil)
 	if err != nil {
 		log.Printf("[cli] error dialing server %s", err)
 		return err
 	}
-	c.conn = conn
-	return c.protocolHandler()
+	c.conn = session
+	return c.receiveVideo()
 }
 
-func (c *Client) protocolHandler() error {
-    stream, err := c.conn.OpenStreamSync(c.ctx)
-    if err != nil {
-        log.Printf("[cli] error opening stream %s", err)
-        return err
-    }
-    defer stream.Close()
+func (c *Client) receiveVideo() error {
+	stream, err := c.conn.AcceptStream(c.ctx)
+	if err != nil {
+		log.Printf("[cli] error accepting stream %s", err)
+		return err
+	}
+	defer stream.Close()
 
-    // Open the video file
-    file, err := os.Open("../test.mp4") // Replace with the path to your video file
-    if err != nil {
-        log.Printf("[cli] error opening video file %s", err)
-        return err
-    }
-    defer file.Close()
+	file, err := os.Create("received_video.mp4")
+	if err != nil {
+		log.Printf("[cli] error creating video file: %s", err)
+		return err
+	}
+	defer file.Close()
 
-    buffer := make([]byte, pdu.MAX_PDU_SIZE)
-    for {
-        n, err := file.Read(buffer)
-        if err != nil {
-            if err == io.EOF {
-                break
-            }
-            log.Printf("[cli] error reading from file %s", err)
-            return err
-        }
+	buffer := make([]byte, pdu.MAX_PDU_SIZE)
+	for {
+		n, err := stream.Read(buffer)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			log.Printf("[cli] error reading from stream %s", err)
+			return err
+		}
 
-		log.Printf("[cli] read %d bytes from file: %s", n, hex.EncodeToString(buffer[:n]))
+		log.Printf("[cli] received %d bytes of video data", n)
 
-        videoPDU := pdu.NewPDU(pdu.TYPE_VIDEO, buffer[:n])
-        pduBytes, err := pdu.PduToBytes(videoPDU)
-        if err != nil {
-            log.Printf("[cli] error encoding PDU: %s", err)
-            return err
-        }
-
-        _, err = stream.Write(pduBytes)
-        if err != nil {
-            log.Printf("[cli] error writing to stream %s", err)
-            return err
-        }
-    }
-    log.Printf("[cli] video streaming completed")
-    return nil
+		_, err = file.Write(buffer[:n])
+		if err != nil {
+			log.Printf("[cli] error writing to video file: %s", err)
+			return err
+		}
+	}
+	log.Printf("[cli] video received successfully")
+	return nil
 }
