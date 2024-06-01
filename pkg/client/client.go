@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
+	"time"
 
 	"drexel.edu/net-quic/pkg/pdu"
 	"drexel.edu/net-quic/pkg/util"
@@ -66,12 +66,7 @@ func (c *Client) receiveVideo() error {
 	}
 	defer stream.Close()
 
-	file, err := os.Create("received_video.mp4")
-	if err != nil {
-		log.Printf("[cli] error creating video file: %s", err)
-		return err
-	}
-	defer file.Close()
+
 
 	buffer := make([]byte, pdu.MAX_PDU_SIZE)
 	for {
@@ -86,11 +81,11 @@ func (c *Client) receiveVideo() error {
 
 		log.Printf("[cli] received %d bytes of video data", n)
 
-		_, err = file.Write(buffer[:n])
-		if err != nil {
-			log.Printf("[cli] error writing to video file: %s", err)
-			return err
-		}
+		// Display the received data (for example, assuming stdout)
+		fmt.Print(string(buffer[:n]))
+
+		// Add some delay to simulate real-time streaming
+		time.Sleep(1000 * time.Millisecond)
 	}
 	log.Printf("[cli] video received successfully")
 	return nil
