@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"time"
+	
 
-	"drexel.edu/net-quic/pkg/pdu"
+	"os/exec"
 	"drexel.edu/net-quic/pkg/util"
 	"github.com/quic-go/quic-go"
+
 )
 
 type ClientConfig struct {
@@ -59,34 +60,48 @@ func (c *Client) Run() error {
 }
 
 func (c *Client) receiveVideo() error {
+	// Accept the QUIC stream
 	stream, err := c.conn.AcceptStream(c.ctx)
 	if err != nil {
-		log.Printf("[cli] error accepting stream %s", err)
+		log.Printf("[cli] error accepting stream: %s", err)
 		return err
 	}
 	defer stream.Close()
 
-
-
-	buffer := make([]byte, pdu.MAX_PDU_SIZE)
-	for {
-		n, err := stream.Read(buffer)
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			log.Printf("[cli] error reading from stream %s", err)
-			return err
-		}
-
-		log.Printf("[cli] received %d bytes of video data", n)
-
-		// Display the received data (for example, assuming stdout)
-		fmt.Print(string(buffer[:n]))
-
-		// Add some delay to simulate real-time streaming
-		time.Sleep(1000 * time.Millisecond)
+	// Command to run FFplay
+	ffmpeg := exec.Command("ffplay", "-f", "mp4", "-i", "pipe:")
+	inpipe, err := ffmpeg.StdinPipe()
+	if err != nil {
+		log.Printf("Error creating pipe: %v", err)
+		return err
 	}
-	log.Printf("[cli] video received successfully")
+	defer inpipe.Close()
+
+	// Start FFplay process
+	err = ffmpeg.Start()
+	if err != nil {
+		log.Printf("Error starting FFplay: %v", err)
+		return err
+	}
+
+	// Copy data from stream to FFmpeg process concurrently
+	go func() {
+		defer stream.Close()
+		_, err := io.Copy(inpipe, stream)
+		if err != nil {
+			log.Printf("Error copying data to FFmpeg: %v", err)
+			return
+		}
+	}()
+
+	// Wait for FFplay process to finish
+	err = ffmpeg.Wait()
+	if err != nil {
+		log.Printf("FFplay exited with error: %v", err)
+		return err
+	}
+
 	return nil
 }
+
+

@@ -11,6 +11,7 @@ import (
 	"drexel.edu/net-quic/pkg/pdu"
 	"drexel.edu/net-quic/pkg/util"
 	"github.com/quic-go/quic-go"
+	
 )
 
 type ServerConfig struct {
@@ -82,12 +83,15 @@ func (s *Server) streamHandler(sess quic.Connection) {
 	}
 	defer stream.Close()
 
-	file, err := os.Open("test.mp4")
+	filePath := "../test.mp4" // Path to your video file
+
+	file, err := os.Open(filePath)
 	if err != nil {
 		log.Printf("[server] error opening video file: %s", err)
 		return
 	}
 	defer file.Close()
+
 
 	buffer := make([]byte, pdu.MAX_PDU_SIZE)
 	for {
