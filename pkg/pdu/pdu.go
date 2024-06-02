@@ -9,11 +9,10 @@ import (
 
 const (
 	// PDU types
-	TYPE_DATA = 0
-	TYPE_ACK  = 1
-
-	MAX_PDU_SIZE  = 1024
-	PDUHeaderSize = 5 // Size of Mtype (1 byte) + Len (4 bytes)
+	TYPE_DATA    = 0
+	TYPE_ACK     = 1
+	TYPE_VIDEO   = 2
+	MAX_PDU_SIZE = 1024
 )
 
 type PDU struct {

@@ -117,6 +117,8 @@ func (s *Server) streamHandler(sess quic.Connection) {
 			log.Printf("[server] error writing to stream: %s", err)
 			return
 		}
+
+		
 	}
 	log.Printf("[server] video sent successfully")
 }
