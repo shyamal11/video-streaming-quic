@@ -3,6 +3,11 @@ module drexel.edu/net-quic
 go 1.22.0
 
 require (
+	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
+	github.com/quic-go/quic-go v0.42.0
+)
+
+require (
 	github.com/faiface/glhf v0.0.0-20181018222622-82a6317ac380 // indirect
 	github.com/faiface/mainthread v0.0.0-20171120011319-8b78f0a41ae3 // indirect
 	github.com/faiface/pixel v0.10.0 // indirect
@@ -13,7 +18,6 @@ require (
 	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38 // indirect
 	github.com/onsi/ginkgo/v2 v2.9.5 // indirect
 	github.com/pkg/errors v0.8.1 // indirect
-	github.com/quic-go/quic-go v0.42.0 // indirect
 	go.uber.org/mock v0.4.0 // indirect
 	gocv.io/x/gocv v0.36.1 // indirect
 	golang.org/x/crypto v0.4.0 // indirect
