@@ -1,7 +1,7 @@
 # video-streaming-quic
 A video streaming protocol implementation  using QUIC.
 
-# Video Streaming Protocol using QUIC: A Conversational Guide
+# Video Streaming Protocol using QUIC:
 
 Welcome to our guide on the video streaming protocol using QUIC. This document aims to walk you through the design and implementation of a robust video streaming protocol. We'll cover the features of QUIC that we've leveraged, how authentication and error handling are managed, and how multi-client support, chat messages, and video controls are implemented. We'll also explain the states of our DFA and the stateful nature of our protocol.
 
