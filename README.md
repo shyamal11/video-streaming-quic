@@ -1,10 +1,6 @@
 # video-streaming-quic
 A video streaming protocol implementation  using QUIC.
 
-# Video Streaming Protocol using QUIC:
-
-This document shows our protocol implementation and design of video streaming protocol using QUIC.
-
 ## Overview
 
 Our protocol is designed to stream videos from a server to multiple clients using the QUIC protocol. QUIC provides several advantages over traditional protocols, including reduced latency, improved connection resilience, and multiplexing capabilities, which makes it ideal for real-time video streaming applications.
@@ -28,7 +24,7 @@ Clients can send chat messages to the server. This is part of the initialization
 
 ### Video Controls
 
-Clients can control video playback using keyboard inputs. They can pause and play video stream. These controls are implemented by sending specific commands from the client to the server, which processes them and adjusts the video stream accordingly.
+Clients can control video playback using keyboard inputs. They can pause and play video stream. This controls are implemented by sending specific command from the client to the server, which processes them and adjusts the video stream by stopping the video reading and decoding stream accordingly. WHen Played again, the stream bytes continues. 
 
 ## Stateful Protocol with DFA
 
@@ -42,7 +38,7 @@ Our DFA includes the following states:
 2. **Waiting for Server Response**: The server responds with a video menu.
 3. **Waiting for Client Choice**: The client sends their video choice.
 4. **Streaming Video**: The server streams the video to the client.
-5. **Handling Controls**: The client sends control commands (pause, play, rewind, forward).
+5. **Handling Controls**: The client sends control command ie PAUSE.
 6. **Error State**: If an error occurs, the connection logs the error and attempts to recover.
 7. **Waiting for Acknowledgments**: The server waits for acknowledgments from the client to ensure data integrity.
 
@@ -74,8 +70,8 @@ With the command line, the user enters the video choice, and the FFMPEG player i
 
 ### There is a single binary that is used to run both the client and the server
 
-server: go run cmd/echo/echo.go -server
-client: go run cmd/echo/echo.go -client
+- **server:** go run cmd/echo/echo.go -server
+- **client:** go run cmd/echo/echo.go -client
 
 This should be done on separate terminals, and can handle multiple clients. When the client starts, enter a number which plays the required video.  Every client will open the video player, and the SpaceBar key to play / pause. 
 
