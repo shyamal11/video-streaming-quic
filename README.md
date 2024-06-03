@@ -73,5 +73,7 @@ With the command line, the user enters the video choice, and the FFMPEG player i
 - **server:** go run cmd/echo/echo.go -server
 - **client:** go run cmd/echo/echo.go -client
 
-This should be done on separate terminals, and can handle multiple clients. When the client starts, enter a number which plays the required video.  Every client will open the video player, and the SpaceBar key to play / pause. 
+This should be done on separate terminals, and can handle multiple clients. 
+When the client starts, **enter a number on Client CLI** which requestes the required video.  
+Every client will open the video player, and the **SpaceBar key** to **play / pause.** 
 
