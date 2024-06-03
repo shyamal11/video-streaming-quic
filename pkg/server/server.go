@@ -144,16 +144,18 @@ func (s *Server) receiveInitializationData(stream quic.Stream, clientID int) err
 func (s *Server) readVideo(stream quic.Stream, inputChoice string, clientID int) error {
 
 	defer stream.Close()
-	filePath := "../test.mp4"
+	filePath := "test.mp4"
 	if inputChoice == "1" {
-		filePath = "../test.mp4"
+		filePath = "test.mp4"
 	}
 	if inputChoice == "2" {
-		filePath = "../shipvideo.mp4"
+		filePath = "shipvideo.mp4"
 	}
 	if inputChoice == "3" {
-		filePath = "../trainvideo.mp4"
+		filePath = "trainvideo.mp4"
 	}
+
+	// filePath := "../test.mp4"
 
 	file, err := os.Open(filePath)
 	if err != nil {
