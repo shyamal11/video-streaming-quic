@@ -155,7 +155,7 @@ func (c *Client) receiveVideo() error {
 			}
 
 		}
-		log.Println("Received Packet successfully")
+		log.Println("Received Video successfully")
 	}()
 
 	// Wait for FFplay process to complete

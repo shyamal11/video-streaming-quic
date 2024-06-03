@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sync"
 
 	"drexel.edu/net-quic/pkg/pdu"
 	"drexel.edu/net-quic/pkg/util"
@@ -24,16 +25,19 @@ type ServerConfig struct {
 
 // Server represents the QUIC server
 type Server struct {
-	cfg  ServerConfig
-	tls  *tls.Config
-	conn quic.Connection
-	ctx  context.Context
+	cfg       ServerConfig
+	tls       *tls.Config
+	conn      quic.Connection
+	ctx       context.Context
+	clientID  int
+	clientMux sync.Mutex
 }
 
 // NewServer initializes a new Server instance
 func NewServer(cfg ServerConfig) *Server {
 	server := &Server{
-		cfg: cfg,
+		cfg:      cfg,
+		clientID: 0,
 	}
 	server.tls = server.getTLS()
 	server.ctx = context.TODO()
@@ -75,12 +79,17 @@ func (s *Server) Run() error {
 			return err
 		}
 
-		go s.streamHandler(sess)
+		s.clientMux.Lock()
+		s.clientID++
+		clientID := s.clientID
+		s.clientMux.Unlock()
+
+		go s.streamHandler(sess, clientID)
 	}
 }
 
 // streamHandler handles incoming streams for a given session
-func (s *Server) streamHandler(sess quic.Connection) {
+func (s *Server) streamHandler(sess quic.Connection, clientID int) {
 	for {
 		log.Print("[server] waiting for client to open stream")
 		stream, err := sess.AcceptStream(s.ctx)
@@ -90,7 +99,7 @@ func (s *Server) streamHandler(sess quic.Connection) {
 		}
 
 		// Handle initialization handshake
-		err = s.receiveInitializationData(stream)
+		err = s.receiveInitializationData(stream, clientID)
 		if err != nil {
 			log.Printf("[server] error receiving initialization data: %s", err)
 			break
@@ -99,7 +108,7 @@ func (s *Server) streamHandler(sess quic.Connection) {
 }
 
 // receiveInitializationData handles the initial data exchange with the client
-func (s *Server) receiveInitializationData(stream quic.Stream) error {
+func (s *Server) receiveInitializationData(stream quic.Stream, clientID int) error {
 
 	// Read initialization message from the client
 	initData := make([]byte, 1024)
@@ -108,12 +117,12 @@ func (s *Server) receiveInitializationData(stream quic.Stream) error {
 		return err
 	}
 
-	log.Printf("[server] received initialization message: %s", initData[:n])
+	log.Printf("[server] received initialization message from client %d: %s", clientID, initData[:n])
 
 	// User input choice received from client
-
-	stream.Write([]byte("What would you like to watch? \n 1:Dog playing around \n 2:Sailing Boat \n 3:Toy Train \n Enter input as number choice!"))
-	log.Printf("[server] wrote to client \n What would you like to watch? \n 1:Dog playing around \n 2:Sailing Boat \n 3:Toy Train \n Enter input as number choice!")
+	welcomeMsg := fmt.Sprintf("Client %d: What would you like to watch? \n 1: Dog playing around \n 2: Sailing Boat \n 3: Toy Train \n Enter input as number choice!", clientID)
+	stream.Write([]byte(welcomeMsg))
+	log.Printf("[server] sent to client %d: %s", clientID, welcomeMsg)
 
 	// Check if the initialization message indicates the start of video transmission
 	initData = make([]byte, 1)
@@ -121,10 +130,10 @@ func (s *Server) receiveInitializationData(stream quic.Stream) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("[server] received choice as: %s", initData[:n])
-	err = s.readVideo(stream, string(initData[:n]))
+	log.Printf("[server] received choice from client %d: %s", clientID, initData[:n])
+	err = s.readVideo(stream, string(initData[:n]), clientID)
 	if err != nil {
-		log.Printf("[server] error reading video file: %s", err)
+		log.Printf("[server] error reading video file for client %d: %s", clientID, err)
 		return err
 	}
 
@@ -132,7 +141,7 @@ func (s *Server) receiveInitializationData(stream quic.Stream) error {
 }
 
 // readVideo reads and streams the video file based on client's choice
-func (s *Server) readVideo(stream quic.Stream, inputChoice string) error {
+func (s *Server) readVideo(stream quic.Stream, inputChoice string, clientID int) error {
 
 	defer stream.Close()
 	filePath := "test.mp4"
@@ -148,7 +157,7 @@ func (s *Server) readVideo(stream quic.Stream, inputChoice string) error {
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		log.Printf("[server] error opening video file: %s", err)
+		log.Printf("[server] error opening video file for client %d: %s", clientID, err)
 		return err
 	}
 	defer file.Close()
@@ -162,33 +171,33 @@ func (s *Server) readVideo(stream quic.Stream, inputChoice string) error {
 			if err == io.EOF {
 				break
 			}
-			log.Printf("[server] error reading from video file: %s", err)
+			log.Printf("[server] error reading from video file for client %d: %s", clientID, err)
 			return err
 		}
 
 		// Create a PDU with the type DATA, the current packet number, and the data read.
 		pdu := pdu.NewPDU(pdu.TYPE_DATA, currentPacketNo, buffer[:n])
 
-		log.Printf("[server] Sending %d bytes of video data (Packet Number: %d)", n, currentPacketNo)
+		log.Printf("[server] Sending %d bytes of video data to client %d (Packet Number: %d)", n, clientID, currentPacketNo)
 
 		// Convert the PDU to a byte slice for transmission.
 
 		pduBytes, err := pdu.ToFramedBytes()
 
 		if err != nil {
-			log.Printf("[server] error encoding PDU: %s", err)
+			log.Printf("[server] error encoding PDU for client %d: %s", clientID, err)
 			return err
 		}
 
 		// Write the PDU byte slice to the stream.
 		_, err = stream.Write(pduBytes)
 		if err != nil {
-			log.Printf("[server] error writing to stream: %s", err)
+			log.Printf("[server] error writing to stream for client %d: %s", clientID, err)
 			return err
 		}
 
 		currentPacketNo++
 	}
-	log.Printf("[server] video sent successfully")
+	log.Printf("[server] video sent successfully to client %d", clientID)
 	return nil
 }
