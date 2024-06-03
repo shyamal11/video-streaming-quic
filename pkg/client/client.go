@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"os/exec"
 
 	"drexel.edu/net-quic/pkg/pdu"
 	"drexel.edu/net-quic/pkg/util"
 	"github.com/quic-go/quic-go"
+	"golang.org/x/term"
 )
 
 type ClientConfig struct {
@@ -54,7 +56,7 @@ func (c *Client) Run() error {
 		log.Printf("[cli] error dialing server %s", err)
 		return err
 	}
-	
+
 	c.conn = conn
 	return c.receiveVideo()
 }
@@ -63,14 +65,47 @@ func (c *Client) receiveVideo() error {
 	// Accept the QUIC stream
 	stream, err := c.conn.OpenStreamSync(c.ctx)
 	if err != nil {
-		log.Printf("[cli] error accepting stream: %s", err)
+		log.Printf("[cli] error opening stream %s", err)
 		return err
 	}
-	
 
-	_, err = stream.Write([]byte("hi"))
+	n, err := stream.Write([]byte("hello from client"))
 	if err != nil {
-		log.Printf("[cli] error writing initialization message to stream: %s", err)
+		log.Printf("[cli] error writing to stream %s", err)
+		return err
+	}
+	log.Printf("[cli] wrote %d bytes to stream", n)
+
+	initData := make([]byte, 1024)
+	n, err = stream.Read(initData)
+	if err != nil {
+		log.Printf("[cli] error reading from stream %s", err)
+		return err
+	}
+
+	log.Printf("decoded message from server: %s", initData[:n])
+
+	// // Set terminal to raw mode to capture single key presses
+	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+	if err != nil {
+		log.Printf("Error setting terminal to raw mode: %v", err)
+		return err
+	}
+	defer term.Restore(int(os.Stdin.Fd()), oldState)
+
+	// for {
+	//     // Capture a single key press
+	buf := make([]byte, 1)
+	_, err = os.Stdin.Read(buf)
+	if err != nil {
+		log.Printf("Error reading key press: %v", err)
+		return err
+	}
+
+	// Send key press to server
+	_, err = stream.Write(buf)
+	if err != nil {
+		log.Printf("Error sending choice: %v", err)
 		return err
 	}
 
@@ -103,21 +138,16 @@ func (c *Client) receiveVideo() error {
 				return
 			}
 
-          
-			
+			// Print received packet number
+			fmt.Printf("Received packet number: %d\n", pdu.PacketNo)
 
+			// Write video data to FFplay stdin
+			_, err = inpipe.Write(pdu.Data)
+			if err != nil {
+				log.Printf("Error writing to FFplay: %v", err)
+				return
+			}
 
-			
-				// Print received packet number
-				fmt.Printf("Received packet number: %d\n", pdu.PacketNo)
-	
-				// Write video data to FFplay stdin
-				_, err = inpipe.Write(pdu.Data)
-				if err != nil {
-					log.Printf("Error writing to FFplay: %v", err)
-					return
-				}
-			
 		}
 		log.Println("Received Packet successfully")
 	}()
@@ -129,7 +159,5 @@ func (c *Client) receiveVideo() error {
 		return err
 	}
 
-	
 	return nil
 }
-

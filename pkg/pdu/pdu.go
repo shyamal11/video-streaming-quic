@@ -16,13 +16,11 @@ const (
 )
 
 type PDU struct {
-	Mtype uint8  `json:"mtype"`
-	Len   uint32 `json:"len"`
-	Data  []byte `json:"data"`
+	Mtype    uint8  `json:"mtype"`
+	Len      uint32 `json:"len"`
+	Data     []byte `json:"data"`
 	PacketNo uint32 `json:"packetNo"`
 }
-
-
 
 func MakePduBuffer() []byte {
 	return make([]byte, MAX_PDU_SIZE)
@@ -30,12 +28,16 @@ func MakePduBuffer() []byte {
 
 func NewPDU(mtype uint8, packetNo uint32, data []byte) *PDU {
 	return &PDU{
-		Mtype: mtype,
-		Len:   uint32(len(data)),
-		Data:  data,
+		Mtype:    mtype,
+		Len:      uint32(len(data)),
+		Data:     data,
 		PacketNo: packetNo,
 	}
-	
+
+}
+
+func (pdu *PDU) PduToBytes() ([]byte, error) {
+	return json.Marshal(pdu)
 }
 
 func (pdu *PDU) GetTypeAsString() string {
@@ -63,10 +65,6 @@ func PduFromBytes(raw []byte) (*PDU, error) {
 	pdu := &PDU{}
 	err := json.Unmarshal(raw, pdu)
 	return pdu, err
-}
-
-func (pdu *PDU) ToBytes() ([]byte, error) {
-	return json.Marshal(pdu)
 }
 
 // Convert PDU to a byte slice, including a length prefix for framing

@@ -83,49 +83,58 @@ func (s *Server) streamHandler(sess quic.Connection) {
 			break
 		}
 
-		        // Handle initialization handshake
-        err = s.receiveInitializationData(stream)
-        if err != nil {
-            log.Printf("[server] error receiving initialization data: %s", err)
-            break
-        }
+		// Handle initialization handshake
+		err = s.receiveInitializationData(stream)
+		if err != nil {
+			log.Printf("[server] error receiving initialization data: %s", err)
+			break
+		}
 
 		//Handle protocol activity on stream
-		s.readVideo(stream)
+		// s.readVideo(stream)
 	}
 }
 
-
-
 func (s *Server) receiveInitializationData(stream quic.Stream) error {
-    // Read initialization message from the client
-    initData := make([]byte, 1024)
-    n, err := stream.Read(initData)
-    if err != nil {
-        return err
-    }
+	// Read initialization message from the client
+	initData := make([]byte, 1024)
+	n, err := stream.Read(initData)
+	if err != nil {
+		return err
+	}
 
-    log.Printf("[server] received initialization message: %s", initData[:n])
+	log.Printf("[server] received initialization message: %s", initData[:n])
+	stream.Write([]byte("What would you like to watch? \n 1:Dog playing around \n 2:Sailing Boat \n 3:Toy Train \n Enter input as number choice!"))
+	log.Printf("[server] wrote to client \n What would you like to watch? \n 1:Dog playing around \n 2:Sailing Boat \n 3:Toy Train \n Enter input as number choice!")
+	// Check if the initialization message indicates the start of video transmission
+	initData = make([]byte, 1)
+	n, err = stream.Read(initData)
+	if err != nil {
+		return err
+	}
+	log.Printf("[server] received choice as 1: %s", initData[:n])
+	err = s.readVideo(stream, string(initData[:n]))
+	if err != nil {
+		log.Printf("[server] error reading video file: %s", err)
+		return err
+	}
 
-    // Check if the initialization message indicates the start of video transmission
-    if string(initData[:n]) == "hi" {
-        // Start reading the video file and sending its contents over the stream
-        err = s.readVideo(stream)
-        if err != nil {
-            log.Printf("[server] error reading video file: %s", err)
-            return err
-        }
-    }
-
-    return nil
+	return nil
 }
 
-func (s *Server) readVideo(stream  quic.Stream) error {
-	
+func (s *Server) readVideo(stream quic.Stream, inputChoice string) error {
 
 	defer stream.Close()
-
-	filePath := "../test.mp4" // Path to your video file
+	filePath := "test.mp4"
+	if inputChoice == "1" {
+		filePath = "dogvideo.mp4"
+	}
+	if inputChoice == "2" {
+		filePath = "shipvideo.mp4"
+	}
+	if inputChoice == "3" {
+		filePath = "trainvideo.mp4"
+	}
 
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -146,19 +155,13 @@ func (s *Server) readVideo(stream  quic.Stream) error {
 			return err
 		}
 
-		
-
-		
-
 		// Create PDU
 		pdu := pdu.NewPDU(pdu.TYPE_DATA, currentPacketNo, buffer[:n])
 
 		log.Printf("[server] Sending %d bytes of video data (Packet Number: %d)", n, currentPacketNo)
-		
-		
-		
+
 		pduBytes, err := pdu.ToFramedBytes()
-		
+
 		if err != nil {
 			log.Printf("[server] error encoding PDU: %s", err)
 			return err
@@ -170,7 +173,7 @@ func (s *Server) readVideo(stream  quic.Stream) error {
 			return err
 		}
 
-		currentPacketNo++ 
+		currentPacketNo++
 	}
 	log.Printf("[server] video sent successfully")
 	return nil
