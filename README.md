@@ -7,7 +7,14 @@ A video streaming protocol implementation  using QUIC.
 - **Geeta Kukreja:** gk457@drexel.edu
 - **Shyamal Mishra:** sm4825@drexel.edu
 
-Video Presentation Link: https://1513041.mediaspace.kaltura.com/media/CS%20544%3A%20CN%20project/1_8dd2xcmt
+### EXTRA CREDIT TASKS
+
+- Robust protocol
+- Concurrent / Asynchronous server to handle multiple clients.
+- Design Excellence for streaming video frames with serialization and deserialization with proper PDU format.
+- Error Handling with logging of events 
+- Summary with Video Demo Presentation Link: https://1513041.mediaspace.kaltura.com/media/CS%20544%3A%20CN%20project/1_8dd2xcmt
+
 
 ## Overview
 
@@ -93,4 +100,3 @@ With the command line, the user enters the video choice, and the FFMPEG player i
 This should be done on separate terminals, and can handle multiple clients. 
 When the client starts, **enter a number on Client CLI** which requestes the required video.  
 Every client will open the video player, and the **SpaceBar key** to **play / pause ** each stream. 
-
