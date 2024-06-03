@@ -49,23 +49,30 @@ func NewClient(cfg ClientConfig) *Client {
 
 func (c *Client) Run() error {
 	serverAddr := fmt.Sprintf("%s:%d", c.cfg.ServerAddr, c.cfg.PortNumber)
-	session, err := quic.DialAddr(c.ctx, serverAddr, c.tls, nil)
+	conn, err := quic.DialAddr(c.ctx, serverAddr, c.tls, nil)
 	if err != nil {
 		log.Printf("[cli] error dialing server %s", err)
 		return err
 	}
-	c.conn = session
+	
+	c.conn = conn
 	return c.receiveVideo()
 }
 
 func (c *Client) receiveVideo() error {
 	// Accept the QUIC stream
-	stream, err := c.conn.AcceptStream(c.ctx)
+	stream, err := c.conn.OpenStreamSync(c.ctx)
 	if err != nil {
 		log.Printf("[cli] error accepting stream: %s", err)
 		return err
 	}
 	defer stream.Close()
+
+	_, err = stream.Write([]byte("hi"))
+	if err != nil {
+		log.Printf("[cli] error writing initialization message to stream: %s", err)
+		return err
+	}
 
 	// Command to run FFplay
 	ffmpeg := exec.Command("ffplay", "-f", "mp4", "-i", "pipe:")

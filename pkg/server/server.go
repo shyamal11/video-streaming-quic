@@ -75,23 +75,66 @@ func (s *Server) Run() error {
 }
 
 func (s *Server) streamHandler(sess quic.Connection) {
-	stream, err := sess.OpenStream()
-	if err != nil {
-		log.Printf("[server] error opening stream: %s", err)
-		return
+	for {
+		log.Print("[server] waiting for client to open stream")
+		stream, err := sess.AcceptStream(s.ctx)
+		if err != nil {
+			log.Printf("[server] stream closed: %s", err)
+			break
+		}
+
+		        // Handle initialization handshake
+        err = s.receiveInitializationData(stream)
+        if err != nil {
+            log.Printf("[server] error receiving initialization data: %s", err)
+            break
+        }
+
+		//Handle protocol activity on stream
+		s.readVideo(stream)
 	}
+}
+
+
+
+func (s *Server) receiveInitializationData(stream quic.Stream) error {
+    // Read initialization message from the client
+    initData := make([]byte, 1024)
+    n, err := stream.Read(initData)
+    if err != nil {
+        return err
+    }
+
+    log.Printf("[server] received initialization message: %s", initData[:n])
+
+    // Check if the initialization message indicates the start of video transmission
+    if string(initData[:n]) == "hi" {
+        // Start reading the video file and sending its contents over the stream
+        err = s.readVideo(stream)
+        if err != nil {
+            log.Printf("[server] error reading video file: %s", err)
+            return err
+        }
+    }
+
+    return nil
+}
+
+func (s *Server) readVideo(stream  quic.Stream) error {
+	
+
 	defer stream.Close()
 
-	filePath := "test.mp4" // Path to your video file
+	filePath := "../test.mp4" // Path to your video file
 
 	file, err := os.Open(filePath)
 	if err != nil {
 		log.Printf("[server] error opening video file: %s", err)
-		return
+		return err
 	}
 	defer file.Close()
 
-	buffer := make([]byte, pdu.MAX_PDU_SIZE-pdu.PDUHeaderSize)
+	buffer := make([]byte, pdu.MAX_PDU_SIZE)
 	for {
 		n, err := file.Read(buffer)
 		if err != nil {
@@ -99,7 +142,7 @@ func (s *Server) streamHandler(sess quic.Connection) {
 				break
 			}
 			log.Printf("[server] error reading from video file: %s", err)
-			return
+			return err
 		}
 
 		log.Printf("[server] sending %d bytes of video data", n)
@@ -109,18 +152,19 @@ func (s *Server) streamHandler(sess quic.Connection) {
 		pduBytes, err := pdu.ToFramedBytes()
 		if err != nil {
 			log.Printf("[server] error encoding PDU: %s", err)
-			return
+			return err
 		}
 
 		_, err = stream.Write(pduBytes)
 		if err != nil {
 			log.Printf("[server] error writing to stream: %s", err)
-			return
+			return err
 		}
 
 		
 	}
 	log.Printf("[server] video sent successfully")
+	return nil
 }
 
 // package server
