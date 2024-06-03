@@ -3,7 +3,7 @@ A video streaming protocol implementation  using QUIC.
 
 # Video Streaming Protocol using QUIC:
 
-Welcome to our guide on the video streaming protocol using QUIC. This document aims to walk you through the design and implementation of a robust video streaming protocol. We'll cover the features of QUIC that we've leveraged, how authentication and error handling are managed, and how multi-client support, chat messages, and video controls are implemented. We'll also explain the states of our DFA and the stateful nature of our protocol.
+This document shows our protocol implementation and design of video streaming protocol using QUIC.
 
 ## Overview
 
@@ -21,19 +21,18 @@ Our server can handle multiple clients simultaneously. Each client initiates a c
 
 ### Error Handling
 
-Error handling is critical in our protocol. Both the client and server log any errors encountered during communication. If an error occurs, such as an issue with reading from a stream or decoding a PDU, it is logged, and appropriate actions are taken to ensure the connection remains stable.
-
+Error handling is critical in our protocol. Both the client and server log any errors encountered during communication. If an error occurs, such as an issue with reading from a stream or decoding a PDU, it is logged.
 ### Chat Messages from Client to Server
 
 Clients can send chat messages to the server. This is part of the initialization handshake, where the client sends a "hello from client" message. The server responds with a menu of video options for the client to choose from.
 
 ### Video Controls
 
-Clients can control video playback using keyboard inputs. They can pause, play, rewind, and forward the video stream. These controls are implemented by sending specific commands from the client to the server, which processes them and adjusts the video stream accordingly.
+Clients can control video playback using keyboard inputs. They can pause and play video stream. These controls are implemented by sending specific commands from the client to the server, which processes them and adjusts the video stream accordingly.
 
 ## Stateful Protocol with DFA
 
-Both the client and server implement a stateful protocol, ensuring that the protocol adheres to a deterministic finite automaton (DFA). This ensures that both ends of the communication can validate the state of the connection at any given time.
+Both the client and server implement a stateful protocol, ensuring that the protocol adheres to our deterministic finite automaton (DFA). This ensures that both ends of the communication can validate the state of the connection at any given time.
 
 ### States of the DFA
 
@@ -69,4 +68,4 @@ The client can specify the server's hostname or IP address via a configuration f
 
 ---
 
-Feel free to explore and modify the protocol to suit your specific needs. If you encounter any issues or have suggestions for improvements, please open an issue or submit a pull request. Happy streaming!
+
