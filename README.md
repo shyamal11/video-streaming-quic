@@ -3,9 +3,9 @@ A video streaming protocol implementation  using QUIC.
 
 # GROUP 
 
-- **Evan Velagaleti: ** ev379@drexel.edu
-- ** Geeta Kukreja: ** gk457@drexel.edu
-- ** Shyamal Mishra: ** sm4825@drexel.edu
+- **Evan Velagaleti:** ev379@drexel.edu
+- **Geeta Kukreja:** gk457@drexel.edu
+- **Shyamal Mishra:** sm4825@drexel.edu
 
 ## Overview
 
