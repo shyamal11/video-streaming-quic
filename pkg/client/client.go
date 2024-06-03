@@ -15,12 +15,14 @@ import (
 	"golang.org/x/term"
 )
 
+// ClientConfig holds configuration settings for the client
 type ClientConfig struct {
-	ServerAddr string
-	PortNumber int
-	CertFile   string
+	ServerAddr string // Server address
+	PortNumber int    // Server port
+	CertFile   string // Certificate file path
 }
 
+// Client represents the QUIC client
 type Client struct {
 	cfg  ClientConfig
 	tls  *tls.Config
@@ -28,6 +30,7 @@ type Client struct {
 	ctx  context.Context
 }
 
+// NewClient initializes a new Client instance
 func NewClient(cfg ClientConfig) *Client {
 	cli := &Client{
 		cfg: cfg,
@@ -49,6 +52,7 @@ func NewClient(cfg ClientConfig) *Client {
 	return cli
 }
 
+// Run starts the client and connects to the server
 func (c *Client) Run() error {
 	serverAddr := fmt.Sprintf("%s:%d", c.cfg.ServerAddr, c.cfg.PortNumber)
 	conn, err := quic.DialAddr(c.ctx, serverAddr, c.tls, nil)
@@ -61,6 +65,7 @@ func (c *Client) Run() error {
 	return c.receiveVideo()
 }
 
+// receiveVideo handles the video reception process
 func (c *Client) receiveVideo() error {
 	// Accept the QUIC stream
 	stream, err := c.conn.OpenStreamSync(c.ctx)
@@ -69,6 +74,7 @@ func (c *Client) receiveVideo() error {
 		return err
 	}
 
+	// Send initial message to the server
 	n, err := stream.Write([]byte("hello from client"))
 	if err != nil {
 		log.Printf("[cli] error writing to stream %s", err)
@@ -76,6 +82,7 @@ func (c *Client) receiveVideo() error {
 	}
 	log.Printf("[cli] wrote %d bytes to stream", n)
 
+	//Initializes a buffer to hold the initial data
 	initData := make([]byte, 1024)
 	n, err = stream.Read(initData)
 	if err != nil {
@@ -93,8 +100,7 @@ func (c *Client) receiveVideo() error {
 	}
 	defer term.Restore(int(os.Stdin.Fd()), oldState)
 
-	// for {
-	//     // Capture a single key press
+	// Capture a single key press, capturing user's choice.
 	buf := make([]byte, 1)
 	_, err = os.Stdin.Read(buf)
 	if err != nil {
