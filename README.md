@@ -66,6 +66,16 @@ The client can specify the server's hostname or IP address via a configuration f
 - **PortNumber**: Server port.
 - **CertFile**: Path to the certificate file.
 
+### Command Line Output:
+
+With the command line, the user enters the video choice, and the FFMPEG player is used to decode the bytes and stream the video.
+
 ---
 
+### There is a single binary that is used to run both the client and the server
+
+server: go run cmd/echo/echo.go -server
+client: go run cmd/echo/echo.go -client
+
+This should be done on separate terminals, and can handle multiple clients. When the client starts, enter a number which plays the required video.  Every client will open the video player, and the SpaceBar key to play / pause. 
 
