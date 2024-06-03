@@ -120,7 +120,7 @@ func (s *Server) receiveInitializationData(stream quic.Stream, clientID int) err
 	log.Printf("[server] received initialization message from client %d: %s", clientID, initData[:n])
 
 	// User input choice received from client
-	welcomeMsg := fmt.Sprintf("Client %d: What would you like to watch? \n 1: Dog playing around \n 2: Sailing Boat \n 3: Toy Train \n Enter input as number choice!", clientID)
+	welcomeMsg := fmt.Sprintf("Client %d: What would you like to watch? \n 1: big buck bunny \n 2: Sailing Boat \n 3: Toy Train \n Enter input as number choice!", clientID)
 	stream.Write([]byte(welcomeMsg))
 	log.Printf("[server] sent to client %d: %s", clientID, welcomeMsg)
 
@@ -144,15 +144,15 @@ func (s *Server) receiveInitializationData(stream quic.Stream, clientID int) err
 func (s *Server) readVideo(stream quic.Stream, inputChoice string, clientID int) error {
 
 	defer stream.Close()
-	filePath := "test.mp4"
+	filePath := "../test.mp4"
 	if inputChoice == "1" {
-		filePath = "dogvideo.mp4"
+		filePath = "../test.mp4"
 	}
 	if inputChoice == "2" {
-		filePath = "shipvideo.mp4"
+		filePath = "../shipvideo.mp4"
 	}
 	if inputChoice == "3" {
-		filePath = "trainvideo.mp4"
+		filePath = "../trainvideo.mp4"
 	}
 
 	file, err := os.Open(filePath)
