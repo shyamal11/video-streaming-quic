@@ -7,6 +7,8 @@ A video streaming protocol implementation  using QUIC.
 - **Geeta Kukreja:** gk457@drexel.edu
 - **Shyamal Mishra:** sm4825@drexel.edu
 
+Video Presentation Link: https://1513041.mediaspace.kaltura.com/media/CS%20544%3A%20CN%20project/1_8dd2xcmt
+
 ## Overview
 
 Our protocol is designed to stream videos from a server to multiple clients using the QUIC protocol. QUIC provides several advantages over traditional protocols, including reduced latency, improved connection resilience, and multiplexing capabilities, which makes it ideal for real-time video streaming applications.
