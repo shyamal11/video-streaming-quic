@@ -68,17 +68,12 @@ The client can specify the server's hostname or IP address via a configuration f
 - **PortNumber**: Server port.
 - **CertFile**: Path to the certificate file.
 
-### Initial configuration:
-	PORT_NUMBER  = 4242
-
-	//SERVER PARAMETERS
- 
-	SERVER_IP = "0.0.0.0"
-	KEY_FILE  = ""
-
-	//CLIENT PARAMETERS
- 
-	SERVER_ADDR = "localhost"
+### Initial configuration in Echo:
+PORT_NUMBER  = 4242
+SERVER PARAMETERS:
+SERVER_IP = "0.0.0.0"
+CLIENT PARAMETERS 
+SERVER_ADDR = "localhost"
 
 ### Command Line Output:
 
