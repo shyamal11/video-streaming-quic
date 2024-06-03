@@ -135,6 +135,7 @@ func (s *Server) readVideo(stream  quic.Stream) error {
 	defer file.Close()
 
 	buffer := make([]byte, pdu.MAX_PDU_SIZE)
+	currentPacketNo := uint32(1)
 	for {
 		n, err := file.Read(buffer)
 		if err != nil {
@@ -145,11 +146,19 @@ func (s *Server) readVideo(stream  quic.Stream) error {
 			return err
 		}
 
-		log.Printf("[server] sending %d bytes of video data", n)
+		
+
+		
 
 		// Create PDU
-		pdu := pdu.NewPDU(pdu.TYPE_DATA, buffer[:n])
+		pdu := pdu.NewPDU(pdu.TYPE_DATA, currentPacketNo, buffer[:n])
+
+		log.Printf("[server] Sending %d bytes of video data (Packet Number: %d)", n, currentPacketNo)
+		
+		
+		
 		pduBytes, err := pdu.ToFramedBytes()
+		
 		if err != nil {
 			log.Printf("[server] error encoding PDU: %s", err)
 			return err
@@ -161,7 +170,7 @@ func (s *Server) readVideo(stream  quic.Stream) error {
 			return err
 		}
 
-		
+		currentPacketNo++ 
 	}
 	log.Printf("[server] video sent successfully")
 	return nil

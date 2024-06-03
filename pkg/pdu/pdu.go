@@ -19,18 +19,23 @@ type PDU struct {
 	Mtype uint8  `json:"mtype"`
 	Len   uint32 `json:"len"`
 	Data  []byte `json:"data"`
+	PacketNo uint32 `json:"packetNo"`
 }
+
+
 
 func MakePduBuffer() []byte {
 	return make([]byte, MAX_PDU_SIZE)
 }
 
-func NewPDU(mtype uint8, data []byte) *PDU {
+func NewPDU(mtype uint8, packetNo uint32, data []byte) *PDU {
 	return &PDU{
 		Mtype: mtype,
 		Len:   uint32(len(data)),
 		Data:  data,
+		PacketNo: packetNo,
 	}
+	
 }
 
 func (pdu *PDU) GetTypeAsString() string {
