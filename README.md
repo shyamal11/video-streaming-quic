@@ -1,18 +1,7 @@
 # video-streaming-quic
 A video streaming protocol implementation  using QUIC.
 
-# GROUP 
 
-- **Evan Velagaleti:** ev379@drexel.edu
-- **Geeta Kukreja:** gk457@drexel.edu
-- **Shyamal Mishra:** sm4825@drexel.edu
-
-### EXTRA CREDIT TASKS
-
-- Robust protocol
-- Concurrent / Asynchronous server to handle multiple clients.
-- Design Excellence for streaming video frames with serialization and deserialization with proper PDU format.
-- Error Handling with logging of events 
 - Summary with Video Demo Presentation Link: https://1513041.mediaspace.kaltura.com/media/CS%20544%3A%20CN%20project/1_8dd2xcmt
 
 
