@@ -2,7 +2,8 @@
 A video streaming protocol implementation  using QUIC.
 
 
-- Summary with Video Demo Presentation Link: https://1513041.mediaspace.kaltura.com/media/CS%20544%3A%20CN%20project/1_8dd2xcmt
+-  Video Demo Presentation Link: https://youtu.be/BP4TSJ3Nyt0 [![Watch the video](https://img.youtube.com/vi/<VIDEO_ID>/0.jpg)](https://www.youtube.com/watch?v=<VIDEO_ID>)
+
 
 
 ## Overview
