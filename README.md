@@ -10,9 +10,6 @@ A video streaming protocol implementation  using QUIC.
 </a>
 
 
-[![Watch the video](https://img.youtube.com/vi/RvkMfwO-kms/0.jpg)](https://youtu.be/RvkMfwO-kms)
-
-
 
 
 ## Overview
