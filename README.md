@@ -5,7 +5,7 @@ A video streaming protocol implementation  using QUIC.
 -  Video Demo Presentation Link:
 
  <a href="https://youtu.be/RvkMfwO-kms" target="_blank">
-  <img src="https://img.youtube.com/vi/RvkMfwO-kms/0.jpg" alt="Watch the video" style="width:100%; max-width:600px; position:relative;" />
+  <img src="https://img.youtube.com/vi/RvkMfwO-kms/0.jpg" alt="Watch the video" style="width:50%; max-width:600px; position:relative;" />
   <img src="https://img.icons8.com/color/48/000000/play-button-circled.png" alt="Play Button" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);"/>
 </a>
 
